@@ -1,6 +1,6 @@
 extern crate futures;
 
-use futures::Future;
+use futures::prelude::*;
 use futures::future;
 use futures::unsync::oneshot::{channel, Canceled};
 
@@ -43,4 +43,13 @@ fn tx_dropped_rx_unparked() {
         Ok(11)
     }));
     assert_eq!(res.wait().unwrap_err(), Canceled);
+}
+
+
+#[test]
+fn is_canceled() {
+    let (tx, rx) = channel::<u32>();
+    assert!(!tx.is_canceled());
+    drop(rx);
+    assert!(tx.is_canceled());
 }

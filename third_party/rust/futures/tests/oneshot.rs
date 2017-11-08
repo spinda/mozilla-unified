@@ -3,7 +3,7 @@ extern crate futures;
 use std::sync::mpsc;
 use std::thread;
 
-use futures::{Future, Poll};
+use futures::prelude::*;
 use futures::future::{lazy, ok};
 use futures::sync::oneshot::*;
 
@@ -21,7 +21,7 @@ fn smoke_poll() {
         assert!(tx.poll_cancel().unwrap().is_ready());
         ok::<(), ()>(())
     }));
-    assert!(task.poll_future(unpark_noop()).unwrap().is_ready());
+    assert!(task.poll_future_notify(&notify_noop(), 0).unwrap().is_ready());
 }
 
 #[test]
@@ -88,4 +88,12 @@ fn close_wakes() {
     WaitForCancel { tx: tx }.wait().unwrap();
     tx2.send(()).unwrap();
     t.join().unwrap();
+}
+
+#[test]
+fn is_canceled() {
+    let (tx, rx) = channel::<u32>();
+    assert!(!tx.is_canceled());
+    drop(rx);
+    assert!(tx.is_canceled());
 }

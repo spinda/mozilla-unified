@@ -1,25 +1,24 @@
 [package]
 
 name = "unicase"
-version = "1.4.0"
+version = "2.0.0"
 authors = ["Sean McArthur <sean.monstar@gmail.com>"]
 description = "A case-insensitive wrapper around strings."
 repository = "https://github.com/seanmonstar/unicase"
-license = "MIT"
+license = "MIT/Apache-2.0"
 keywords = ["lowercase", "case", "case-insensitive"]
+
+exclude = [
+    "scripts/"
+]
 
 build = "build.rs"
 
 [build-dependencies]
+# rustc_version must stay on 0.1 for now, since the minimum working
+# rustc for unicase is 1.3, and newer rustc_version requires a newer
+# compiler.
 rustc_version = "0.1"
 
-[dependencies.heapsize]
-version = ">=0.2.0, <0.4"
-optional = true
-
-[dependencies.heapsize_plugin]
-version = "0.1.2"
-optional = true
-
 [features]
-heap_size = ["heapsize", "heapsize_plugin"]
+nightly = []

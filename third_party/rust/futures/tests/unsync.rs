@@ -4,10 +4,11 @@ extern crate futures;
 
 mod support;
 
-use futures::{Future, Stream, Sink, Async};
+use futures::prelude::*;
+use futures::unsync::oneshot;
 use futures::unsync::mpsc::{self, SendError};
 use futures::future::lazy;
-use futures::stream::iter;
+use futures::stream::{iter_ok, unfold};
 
 use support::local_executor::Core;
 
@@ -65,11 +66,11 @@ fn mpsc_tx_err() {
 fn mpsc_backpressure() {
     let (tx, rx) = mpsc::channel::<i32>(1);
     lazy(move || {
-        iter(vec![1, 2, 3].into_iter().map(Ok))
+        iter_ok(vec![1, 2, 3])
             .forward(tx)
             .map_err(|e: SendError<i32>| panic!("{}", e))
             .join(rx.take(3).collect().map(|xs| {
-                assert!(xs == [1, 2, 3]);
+                assert_eq!(xs, [1, 2, 3]);
             }))
     }).wait().unwrap();
 }
@@ -78,31 +79,45 @@ fn mpsc_backpressure() {
 fn mpsc_unbounded() {
     let (tx, rx) = mpsc::unbounded::<i32>();
     lazy(move || {
-        iter(vec![1, 2, 3].into_iter().map(Ok))
+        iter_ok(vec![1, 2, 3])
             .forward(tx)
             .map_err(|e: SendError<i32>| panic!("{}", e))
             .join(rx.take(3).collect().map(|xs| {
-                assert!(xs == [1, 2, 3]);
+                assert_eq!(xs, [1, 2, 3]);
             }))
     }).wait().unwrap();
 }
 
 #[test]
 fn mpsc_recv_unpark() {
-    let mut core = Core::new();
+    let core = Core::new();
     let (tx, rx) = mpsc::channel::<i32>(1);
     let tx2 = tx.clone();
-    core.spawn(rx.collect().map(|xs| assert!(xs == [1, 2])));
+    core.spawn(rx.collect().map(|xs| assert_eq!(xs, [1, 2])));
     core.spawn(lazy(move || tx.send(1).map(|_| ()).map_err(|e| panic!("{}", e))));
     core.run(lazy(move || tx2.send(2))).unwrap();
 }
 
 #[test]
 fn mpsc_send_unpark() {
-    let mut core = Core::new();
+    let core = Core::new();
     let (tx, rx) = mpsc::channel::<i32>(1);
-    core.spawn(iter(vec![1, 2].into_iter().map(Ok)).forward(tx)
-               .then(|x: Result<_, SendError<i32>>| { assert!(x.is_err()); Ok(()) }));
+    let (donetx, donerx) = oneshot::channel();
+    core.spawn(iter_ok(vec![1, 2]).forward(tx)
+        .then(|x: Result<_, SendError<i32>>| {
+            assert!(x.is_err());
+            donetx.send(()).unwrap();
+            Ok(())
+        }));
     core.spawn(lazy(move || { let _ = rx; Ok(()) }));
-    core.wait();
+    core.run(donerx).unwrap();
+}
+
+#[test]
+fn spawn_sends_items() {
+    let core = Core::new();
+    let stream = unfold(0, |i| Some(Ok::<_,u8>((i, i + 1))));
+    let rx = mpsc::spawn(stream, &core, 1);
+    assert_eq!(core.run(rx.take(4).collect()).unwrap(),
+               [0, 1, 2, 3]);
 }

@@ -4,7 +4,7 @@ use std::any::Any;
 
 use futures::sync::oneshot;
 use futures::stream::futures_unordered;
-use futures::Future;
+use futures::prelude::*;
 
 mod support;
 
@@ -33,14 +33,31 @@ fn works_2() {
     let (b_tx, b_rx) = oneshot::channel::<u32>();
     let (c_tx, c_rx) = oneshot::channel::<u32>();
 
-    let stream = futures_unordered(vec![a_rx.boxed(), b_rx.join(c_rx).map(|(a, b)| a + b).boxed()]);
+    let stream = futures_unordered(vec![
+        Box::new(a_rx) as Box<Future<Item = _, Error = _>>,
+        Box::new(b_rx.join(c_rx).map(|(a, b)| a + b)),
+    ]);
 
     let mut spawn = futures::executor::spawn(stream);
     a_tx.send(33).unwrap();
     b_tx.send(33).unwrap();
-    assert!(spawn.poll_stream(support::unpark_noop()).unwrap().is_ready());
+    assert!(spawn.poll_stream_notify(&support::notify_noop(), 0).unwrap().is_ready());
     c_tx.send(33).unwrap();
-    assert!(spawn.poll_stream(support::unpark_noop()).unwrap().is_ready());
+    assert!(spawn.poll_stream_notify(&support::notify_noop(), 0).unwrap().is_ready());
+}
+
+#[test]
+fn from_iterator() {
+    use futures::future::ok;
+    use futures::stream::FuturesUnordered;
+
+    let stream = vec![
+        ok::<u32, ()>(1),
+        ok::<u32, ()>(2),
+        ok::<u32, ()>(3)
+    ].into_iter().collect::<FuturesUnordered<_>>();
+    assert_eq!(stream.len(), 3);
+    assert_eq!(stream.collect().wait(), Ok(vec![1,2,3]));
 }
 
 #[test]
@@ -50,19 +67,19 @@ fn finished_future_ok() {
     let (c_tx, c_rx) = oneshot::channel::<Box<Any+Send>>();
 
     let stream = futures_unordered(vec![
-        a_rx.boxed(),
-        b_rx.select(c_rx).then(|res| Ok(Box::new(res) as Box<Any+Send>)).boxed(),
+        Box::new(a_rx) as Box<Future<Item = _, Error = _>>,
+        Box::new(b_rx.select(c_rx).then(|res| Ok(Box::new(res) as Box<Any+Send>))),
     ]);
 
     let mut spawn = futures::executor::spawn(stream);
     for _ in 0..10 {
-        assert!(spawn.poll_stream(support::unpark_noop()).unwrap().is_not_ready());
+        assert!(spawn.poll_stream_notify(&support::notify_noop(), 0).unwrap().is_not_ready());
     }
 
     b_tx.send(Box::new(())).unwrap();
-    let next = spawn.poll_stream(support::unpark_noop()).unwrap();
+    let next = spawn.poll_stream_notify(&support::notify_noop(), 0).unwrap();
     assert!(next.is_ready());
     c_tx.send(Box::new(())).unwrap();
-    assert!(spawn.poll_stream(support::unpark_noop()).unwrap().is_not_ready());
-    assert!(spawn.poll_stream(support::unpark_noop()).unwrap().is_not_ready());
+    assert!(spawn.poll_stream_notify(&support::notify_noop(), 0).unwrap().is_not_ready());
+    assert!(spawn.poll_stream_notify(&support::notify_noop(), 0).unwrap().is_not_ready());
 }
