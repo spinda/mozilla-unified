@@ -175,6 +175,7 @@ LOCAL_INCLUDES += [
     '../components/windowwatcher',
     '../profile',
     '/config',
+    '/devtools/cdp/parent',
     '/dom/base',
     '/dom/commandhandler',
     '/dom/ipc',

@@ -67,6 +67,12 @@ public:
   ContentParent* GetContentProcessById(const ContentParentId& aChildCpId);
 
   /**
+   * Return a list of all top-level content process ids.
+   */
+  nsTArray<ContentParentId>
+  GetTopLevelContentProcesses();
+
+  /**
    * Return a list of all child process's id.
    */
   nsTArray<ContentParentId>

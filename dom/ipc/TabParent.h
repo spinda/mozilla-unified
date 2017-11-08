@@ -316,6 +316,12 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent) override;
 
+  virtual PCdpRemotePageToolsParent*
+  AllocPCdpRemotePageToolsParent() override;
+
+  virtual bool
+  DeallocPCdpRemotePageToolsParent(PCdpRemotePageToolsParent* aActor) override;
+
   virtual PColorPickerParent*
   AllocPColorPickerParent(const nsString& aTitle,
                           const nsString& aInitialColor) override;

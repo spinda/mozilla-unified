@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PCdpRemotePageTools;
 include protocol PColorPicker;
 include protocol PContent;
 include protocol PContentBridge;
@@ -108,6 +109,7 @@ nested(upto inside_cpow) sync protocol PBrowser
 {
     manager PContent or PContentBridge;
 
+    manages PCdpRemotePageTools;
     manages PColorPicker;
     manages PDocAccessible;
     manages PDocumentRenderer;
@@ -595,6 +597,8 @@ parent:
     async RequestCrossBrowserNavigation(uint32_t aGlobalIndex);
 
 child:
+    async PCdpRemotePageTools();
+
     /**
      * Notify the remote browser that it has been Show()n on this
      * side, with the given |visibleRect|.  This message is expected

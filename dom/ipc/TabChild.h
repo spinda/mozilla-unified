@@ -510,6 +510,10 @@ public:
                                    const nsIntSize& aRenderSize) override;
 
 
+  virtual PCdpRemotePageToolsChild* AllocPCdpRemotePageToolsChild() override;
+
+  virtual bool DeallocPCdpRemotePageToolsChild(PCdpRemotePageToolsChild* aActor) override;
+
   virtual PColorPickerChild*
   AllocPColorPickerChild(const nsString& aTitle,
                          const nsString& aInitialColor) override;

@@ -91,6 +91,7 @@
 #include "mozilla/scache/StartupCache.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
+#include "CdpParentRemote.h"
 
 #include "mozilla/Unused.h"
 
@@ -4381,6 +4382,13 @@ XREMain::XRE_mainRun()
                     PR_UNJOINABLE_THREAD, 0);
   }
 #endif
+
+  const char* cdpPort = PR_GetEnv("MOZ_CDP_PORT");
+  if (cdpPort)
+  {
+    rv = devtools::cdp::RemoteServer::Start(cdpPort);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  }
 
   if (gDoMigration) {
     nsCOMPtr<nsIFile> file;

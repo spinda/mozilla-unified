@@ -126,6 +126,7 @@
 #include "nsString.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/Telemetry.h"
+#include "CdpRemotePageToolsChild.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetChild.h"
@@ -154,6 +155,7 @@ using namespace mozilla::layout;
 using namespace mozilla::docshell;
 using namespace mozilla::widget;
 using namespace mozilla::jsipc;
+using namespace mozilla::devtools::cdp;
 using mozilla::layers::GeckoContentController;
 
 NS_IMPL_ISUPPORTS(ContentListener, nsIDOMEventListener)
@@ -2232,6 +2234,19 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
       return IPC_FAIL_NO_REASON(this);
     }
     return IPC_OK();
+}
+
+PCdpRemotePageToolsChild*
+TabChild::AllocPCdpRemotePageToolsChild()
+{
+  return CdpRemotePageToolsChild::Create();
+}
+
+bool
+TabChild::DeallocPCdpRemotePageToolsChild(PCdpRemotePageToolsChild* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 PColorPickerChild*

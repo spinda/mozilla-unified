@@ -80,6 +80,7 @@
 #include "nsThreadUtils.h"
 #include "PermissionMessageUtils.h"
 #include "StructuredCloneData.h"
+#include "CdpRemotePageToolsParent.h"
 #include "ColorPickerParent.h"
 #include "FilePickerParent.h"
 #include "TabChild.h"
@@ -121,6 +122,7 @@ using namespace mozilla::services;
 using namespace mozilla::widget;
 using namespace mozilla::jsipc;
 using namespace mozilla::gfx;
+using namespace mozilla::devtools::cdp;
 
 using mozilla::Unused;
 
@@ -2632,6 +2634,19 @@ TabParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
 
   *aResult = prompt.forget().take();
   return NS_OK;
+}
+
+PCdpRemotePageToolsParent*
+TabParent::AllocPCdpRemotePageToolsParent()
+{
+  return CdpRemotePageToolsParent::Create();
+}
+
+bool
+TabParent::DeallocPCdpRemotePageToolsParent(PCdpRemotePageToolsParent* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 PColorPickerParent*

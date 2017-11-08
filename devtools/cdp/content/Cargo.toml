@@ -1,0 +1,26 @@
+[package]
+name = "gecko-cdp-content"
+version = "0.0.0"
+authors = ["Michael Smith <michael@spinda.net>"]
+license = "MPL-2.0"
+description = """
+Content process-side Chrome DevTools Protocol implementation for Gecko
+"""
+
+[lib]
+name = "gecko_cdp_content"
+path = "lib.rs"
+
+[dependencies]
+serde = "1.0.8"
+
+[dependencies.cdp]
+git = "https://github.com/devtools-html/rust-cdp"
+rev = "535c6e058bb79a2ba5581b1ae5784c5d9eb93394"
+
+[dependencies.cdp-derive]
+git = "https://github.com/devtools-html/rust-cdp"
+rev = "535c6e058bb79a2ba5581b1ae5784c5d9eb93394"
+
+[dependencies.nsstring]
+path = "../../../xpcom/rust/nsstring"

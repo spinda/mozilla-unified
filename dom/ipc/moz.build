@@ -122,6 +122,9 @@ if CONFIG['MOZ_CONTENT_SANDBOX'] and CONFIG['OS_ARCH'] == 'Linux':
 LOCAL_INCLUDES += [
     '/caps',
     '/chrome',
+    '/devtools/cdp',
+    '/devtools/cdp/content',
+    '/devtools/cdp/parent',
     '/docshell/base',
     '/dom/base',
     '/dom/events',

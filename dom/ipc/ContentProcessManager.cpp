@@ -117,6 +117,23 @@ ContentProcessManager::GetContentProcessById(const ContentParentId& aChildCpId)
 }
 
 nsTArray<ContentParentId>
+ContentProcessManager::GetTopLevelContentProcesses()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsTArray<ContentParentId> cpIdArray;
+  for (auto iter = mContentParentMap.begin();
+       iter != mContentParentMap.end();
+       ++iter) {
+    if (iter->second.mParentCpId == 0) {
+      cpIdArray.AppendElement(iter->first);
+    }
+  }
+
+  return Move(cpIdArray);
+}
+
+nsTArray<ContentParentId>
 ContentProcessManager::GetAllChildProcessById(const ContentParentId& aParentCpId)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -256,14 +273,12 @@ ContentProcessManager::GetRemoteFrameOpenerTabId(const ContentParentId& aChildCp
 {
   MOZ_ASSERT(NS_IsMainThread());
   auto iter = mContentParentMap.find(aChildCpId);
-  if (NS_WARN_IF(iter == mContentParentMap.end())) {
-    ASSERT_UNLESS_FUZZING();
+  if (iter == mContentParentMap.end()) {
     return false;
   }
 
   auto remoteFrameIter = iter->second.mRemoteFrames.find(aChildTabId);
-  if (NS_WARN_IF(remoteFrameIter == iter->second.mRemoteFrames.end())) {
-    ASSERT_UNLESS_FUZZING();
+  if (remoteFrameIter == iter->second.mRemoteFrames.end()) {
     return false;
   }
 

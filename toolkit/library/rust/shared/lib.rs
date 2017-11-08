@@ -19,6 +19,8 @@ extern crate encoding_glue;
 extern crate audioipc_client;
 #[cfg(feature = "cubeb-remoting")]
 extern crate audioipc_server;
+extern crate gecko_cdp_parent;
+extern crate gecko_cdp_content;
 
 use std::boxed::Box;
 use std::ffi::CStr;
